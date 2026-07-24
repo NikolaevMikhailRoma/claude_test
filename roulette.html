@@ -1,0 +1,871 @@
+<title>Рулетка «Монте-Гранд»</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --felt-1: #0e3d2c;
+    --felt-2: #0a2e21;
+    --felt-edge: #072019;
+    --rail: #3a2415;
+    --rail-light: #5a3a20;
+    --gold: #c9a24b;
+    --gold-bright: #e8cc7d;
+    --gold-dim: #8a6f37;
+    --cream: #f2e8d2;
+    --cream-dim: #cbbfa0;
+    --ink: #100d09;
+    --red-pocket: #9c1f2e;
+    --red-pocket-dark: #6f1420;
+    --black-pocket: #17130f;
+    --black-pocket-light: #2b241c;
+    --panel: rgba(8, 30, 22, 0.72);
+    --panel-border: rgba(201, 162, 75, 0.35);
+    --shadow: rgba(0, 0, 0, 0.55);
+    --focus: #e8cc7d;
+  }
+
+  :root[data-theme="light"] {
+    --felt-1: #12442f;
+    --felt-2: #0d3524;
+    --page-bg-1: #efe6d2;
+    --page-bg-2: #d9cba3;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      --page-bg-1: #efe6d2;
+      --page-bg-2: #d9cba3;
+    }
+  }
+  :root {
+    --page-bg-1: #1b160f;
+    --page-bg-2: #0c0a06;
+  }
+  :root[data-theme="dark"] {
+    --page-bg-1: #1b160f;
+    --page-bg-2: #0c0a06;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    min-height: 100%;
+    overflow-x: hidden;
+  }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--cream);
+    background:
+      radial-gradient(1200px 700px at 50% -10%, rgba(201,162,75,0.10), transparent 60%),
+      radial-gradient(ellipse at center, var(--page-bg-1), var(--page-bg-2));
+    padding: clamp(14px, 3vw, 36px);
+    display: flex;
+    justify-content: center;
+  }
+
+  .stage {
+    width: 100%;
+    max-width: 1180px;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(14px, 2.4vw, 22px);
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    text-align: center;
+    padding: clamp(10px, 2vw, 18px) 10px 4px;
+  }
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--gold);
+    opacity: 0.85;
+  }
+  h1 {
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
+    font-weight: 400;
+    font-variant: small-caps;
+    letter-spacing: 0.05em;
+    font-size: clamp(28px, 5vw, 46px);
+    margin: 6px 0 4px;
+    text-wrap: balance;
+    color: var(--cream);
+    text-shadow: 0 1px 0 rgba(0,0,0,0.4), 0 0 26px rgba(201,162,75,0.18);
+  }
+  h1 em {
+    font-style: normal;
+    color: var(--gold-bright);
+  }
+  .subhead {
+    color: var(--cream-dim);
+    font-size: 14px;
+    max-width: 46ch;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+
+  /* ---------- Layout grid ---------- */
+  .floor {
+    display: grid;
+    grid-template-columns: minmax(260px, 380px) 1fr;
+    gap: clamp(14px, 2vw, 22px);
+    align-items: start;
+  }
+  @media (max-width: 860px) {
+    .floor { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 14px;
+    box-shadow: 0 18px 40px var(--shadow), inset 0 1px 0 rgba(255,255,255,0.04);
+    backdrop-filter: blur(2px);
+  }
+
+  /* ---------- Wheel column ---------- */
+  .wheel-col {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px;
+  }
+
+  .wheel-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 320px;
+    aspect-ratio: 1 / 1;
+    margin: 6px auto 2px;
+  }
+  .wheel-pointer {
+    position: absolute;
+    top: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 9px solid transparent;
+    border-right: 9px solid transparent;
+    border-top: 16px solid var(--gold-bright);
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5));
+    z-index: 5;
+  }
+  .wheel-rim {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 35% 30%, var(--gold-bright), var(--gold) 45%, var(--gold-dim) 78%, #5c491f 100%);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.55), inset 0 0 0 2px rgba(0,0,0,0.25);
+  }
+  .wheel-disc {
+    position: absolute;
+    inset: 5.5%;
+    border-radius: 50%;
+    overflow: hidden;
+    transition: transform 4.2s cubic-bezier(0.12, 0.7, 0.1, 1);
+    box-shadow: inset 0 0 0 2px rgba(0,0,0,0.35), inset 0 0 18px rgba(0,0,0,0.6);
+  }
+  .wheel-disc svg { display: block; width: 100%; height: 100%; }
+  .wheel-hub {
+    position: absolute;
+    inset: 40%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 32%, var(--gold-bright), var(--gold) 55%, var(--gold-dim));
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5), inset 0 0 0 2px rgba(0,0,0,0.3);
+    z-index: 4;
+  }
+
+  .result-plate {
+    text-align: center;
+    padding: 10px 8px 4px;
+    min-height: 58px;
+  }
+  .result-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 17px;
+    font-variant-numeric: tabular-nums;
+    color: var(--cream);
+    border: 2px solid rgba(232,204,125,0.6);
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+  .result-text {
+    font-size: 14px;
+    color: var(--cream-dim);
+  }
+  .pocket-red { background: var(--red-pocket); }
+  .pocket-black { background: var(--black-pocket-light); }
+  .pocket-green { background: var(--felt-1); }
+
+  .history {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    padding: 4px 4px 2px;
+  }
+  .history .chip-hist {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    font-size: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-variant-numeric: tabular-nums;
+    color: var(--cream);
+    opacity: 0.9;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+
+  .balance-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-top: 1px solid var(--panel-border);
+    padding: 12px 16px 4px;
+  }
+  .balance-label {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--cream-dim);
+  }
+  .balance-value {
+    font-size: 22px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--gold-bright);
+  }
+  .balance-value::after {
+    content: " ●";
+    font-size: 13px;
+    color: var(--gold-dim);
+  }
+
+  .chip-rail {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    padding: 6px 16px 4px;
+    flex-wrap: wrap;
+  }
+  .chip {
+    --chip-color: var(--gold);
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    font-weight: 700;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    background:
+      repeating-conic-gradient(var(--cream) 0deg 30deg, var(--chip-color) 30deg 60deg);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5), inset 0 0 0 3px rgba(255,255,255,0.75), inset 0 0 0 6px rgba(0,0,0,0.15);
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.15s ease;
+  }
+  .chip::before {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border-radius: 50%;
+    background: var(--chip-color);
+  }
+  .chip span { position: relative; z-index: 1; color: var(--cream); text-shadow: 0 1px 1px rgba(0,0,0,0.5); }
+  .chip:hover { transform: translateY(-2px); }
+  .chip:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .chip[aria-pressed="true"] {
+    transform: translateY(-4px);
+    box-shadow: 0 0 0 3px var(--gold-bright), 0 6px 14px rgba(0,0,0,0.55);
+  }
+  .chip[data-v="5"]   { --chip-color: #2f6b46; }
+  .chip[data-v="10"]  { --chip-color: #2e5f9c; }
+  .chip[data-v="25"]  { --chip-color: #9c1f2e; }
+  .chip[data-v="50"]  { --chip-color: #4a3a83; }
+  .chip[data-v="100"] { --chip-color: #17130f; }
+
+  .action-row {
+    display: flex;
+    gap: 10px;
+    padding: 12px 16px 16px;
+  }
+  button.cta {
+    flex: 1;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 12px 10px;
+    border-radius: 9px;
+    border: 1px solid var(--panel-border);
+    cursor: pointer;
+    transition: filter 0.15s ease, transform 0.1s ease;
+  }
+  button.cta:active { transform: translateY(1px); }
+  button.cta:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  button.cta:disabled { opacity: 0.45; cursor: not-allowed; }
+  .cta-spin {
+    background: linear-gradient(180deg, var(--gold-bright), var(--gold) 60%, var(--gold-dim));
+    color: var(--ink);
+  }
+  .cta-spin:hover:not(:disabled) { filter: brightness(1.08); }
+  .cta-clear {
+    background: rgba(255,255,255,0.04);
+    color: var(--cream);
+  }
+  .cta-clear:hover:not(:disabled) { background: rgba(255,255,255,0.09); }
+
+  /* ---------- Table column ---------- */
+  .table-col {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .table-scroll {
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .betting-table {
+    display: grid;
+    grid-template-columns: 56px repeat(12, 56px);
+    grid-template-rows: repeat(3, 52px) 34px;
+    gap: 3px;
+    min-width: 720px;
+    background: var(--felt-edge);
+    padding: 8px;
+    border-radius: 10px;
+    border: 1px solid var(--panel-border);
+    background-image: radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.03) 50%, transparent),
+      linear-gradient(180deg, var(--felt-1), var(--felt-2));
+  }
+  .cell {
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+    color: var(--cream);
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+    border: 1px solid rgba(0,0,0,0.35);
+    transition: filter 0.12s ease;
+  }
+  .cell:hover { filter: brightness(1.18); }
+  .cell:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; z-index: 2; }
+  .cell.zero {
+    grid-row: 1 / span 3;
+    grid-column: 1;
+    background: linear-gradient(160deg, #1c5c3f, var(--felt-1));
+    border-radius: 8px 5px 5px 8px;
+    font-size: 16px;
+  }
+  .cell.num-red { background: linear-gradient(160deg, #b5273a, var(--red-pocket-dark)); }
+  .cell.num-black { background: linear-gradient(160deg, var(--black-pocket-light), var(--black-pocket)); }
+  .cell.outside {
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    background: rgba(255,255,255,0.045);
+  }
+  .cell.dozen { grid-column: span 4; grid-row: 4; font-size: 11.5px; }
+  .cell.half { grid-column: span 6; grid-row: 5; font-size: 11.5px; }
+  .betting-table { grid-template-rows: repeat(3, 52px) 34px 34px; }
+
+  .bet-badge {
+    position: absolute;
+    bottom: -6px;
+    right: -6px;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 4px;
+    border-radius: 50%;
+    background: var(--gold-bright);
+    color: var(--ink);
+    font-size: 10.5px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5), 0 0 0 2px var(--felt-edge);
+    animation: drop 0.18s ease-out;
+  }
+  @keyframes drop {
+    from { transform: translateY(-6px) scale(0.7); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+  }
+
+  .table-caption {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--cream-dim);
+  }
+  .table-caption strong { color: var(--gold-bright); }
+
+  /* ---------- Ad plaque ---------- */
+  .ad-plaque {
+    margin-top: 2px;
+    border: 1.5px dashed var(--gold-dim);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    background: repeating-linear-gradient(135deg, rgba(201,162,75,0.05) 0 10px, transparent 10px 20px);
+  }
+  .ad-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+  }
+  .ad-plaque p {
+    margin: 6px 0 0;
+    font-size: 15px;
+    color: var(--cream-dim);
+    font-style: italic;
+  }
+
+  footer {
+    text-align: center;
+    font-size: 11.5px;
+    color: var(--cream-dim);
+    opacity: 0.75;
+    line-height: 1.6;
+    padding: 4px 12px 10px;
+  }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 22px;
+    transform: translate(-50%, 20px);
+    background: var(--ink);
+    color: var(--gold-bright);
+    border: 1px solid var(--gold-dim);
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    z-index: 20;
+    max-width: 90vw;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wheel-disc { transition: none !important; }
+    .bet-badge { animation: none; }
+    .toast { transition: none; }
+  }
+</style>
+
+<div class="stage">
+  <header>
+    <div class="eyebrow">Демонстрационное казино · игра на условные фишки</div>
+    <h1>Рулетка «<em>Монте-Гранд</em>»</h1>
+    <p class="subhead">Классическая европейская рулетка с одним зеро. Ставьте виртуальные фишки, крутите колесо и проверяйте удачу — без единого реального рубля.</p>
+  </header>
+
+  <div class="floor">
+    <div class="panel wheel-col">
+      <div class="wheel-wrap">
+        <div class="wheel-pointer" aria-hidden="true"></div>
+        <div class="wheel-rim"></div>
+        <div class="wheel-disc" id="wheelDisc"></div>
+        <div class="wheel-hub" aria-hidden="true"></div>
+      </div>
+
+      <div class="result-plate" id="resultPlate" aria-live="polite">
+        <span class="result-text">Сделайте ставку и нажмите «Крутить»</span>
+      </div>
+
+      <div class="history" id="history" aria-label="История последних чисел"></div>
+
+      <div class="balance-row">
+        <span class="balance-label">Ваши фишки</span>
+        <span class="balance-value" id="balanceValue">1 000</span>
+      </div>
+
+      <div class="chip-rail" role="group" aria-label="Выбор номинала фишки">
+        <button class="chip" data-v="5" aria-pressed="false"><span>5</span></button>
+        <button class="chip" data-v="10" aria-pressed="false"><span>10</span></button>
+        <button class="chip" data-v="25" aria-pressed="true"><span>25</span></button>
+        <button class="chip" data-v="50" aria-pressed="false"><span>50</span></button>
+        <button class="chip" data-v="100" aria-pressed="false"><span>100</span></button>
+      </div>
+
+      <div class="action-row">
+        <button class="cta cta-clear" id="btnClear">Очистить ставки</button>
+        <button class="cta cta-spin" id="btnSpin">Крутить</button>
+      </div>
+    </div>
+
+    <div class="panel table-col">
+      <div class="table-scroll">
+        <div class="betting-table" id="bettingTable" role="group" aria-label="Стол ставок"></div>
+      </div>
+      <div class="table-caption">
+        <span>Прямая ставка на число — выплата <strong>35 к 1</strong></span>
+        <span>Дюжина / столбец — <strong>2 к 1</strong></span>
+        <span>Цвет / чёт-нечет / 1–18 / 19–36 — <strong>1 к 1</strong></span>
+      </div>
+
+      <div class="ad-plaque">
+        <div class="ad-eyebrow">Место для партнёра</div>
+        <p>Ваша реклама будет здесь</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Учебная витрина возможностей платформы. Все фишки условные, ставки ни на что не обмениваются, реальные деньги не участвуют.<br />
+    Тематика азартных игр показана в развлекательных и демонстрационных целях (18+ по смыслу оформления).
+  </footer>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var WHEEL_ORDER = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+  var RED_NUMBERS = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+
+  function colorOf(n) {
+    if (n === 0) return "green";
+    return RED_NUMBERS.has(n) ? "red" : "black";
+  }
+
+  var STORAGE_KEY = "monte-grand-roulette-balance";
+  var balance = 1000;
+  try {
+    var saved = window.localStorage ? localStorage.getItem(STORAGE_KEY) : null;
+    if (saved !== null && !isNaN(parseInt(saved, 10))) balance = parseInt(saved, 10);
+  } catch (e) { /* storage unavailable, keep default */ }
+
+  var selectedChip = 25;
+  var bets = {};
+  var spinning = false;
+  var lastNumbers = [];
+
+  var balanceEl = document.getElementById("balanceValue");
+  var tableEl = document.getElementById("bettingTable");
+  var wheelDisc = document.getElementById("wheelDisc");
+  var resultPlate = document.getElementById("resultPlate");
+  var historyEl = document.getElementById("history");
+  var btnSpin = document.getElementById("btnSpin");
+  var btnClear = document.getElementById("btnClear");
+  var toastEl = document.getElementById("toast");
+  var toastTimer = null;
+
+  function fmt(n) {
+    return n.toLocaleString("ru-RU");
+  }
+
+  function renderBalance() {
+    balanceEl.textContent = fmt(balance);
+    try { if (window.localStorage) localStorage.setItem(STORAGE_KEY, String(balance)); } catch (e) {}
+  }
+
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove("show"); }, 2600);
+  }
+
+  // ---- Chip rail ----
+  var chipButtons = Array.prototype.slice.call(document.querySelectorAll(".chip"));
+  chipButtons.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      selectedChip = parseInt(btn.getAttribute("data-v"), 10);
+      chipButtons.forEach(function (b) { b.setAttribute("aria-pressed", b === btn ? "true" : "false"); });
+    });
+  });
+
+  // ---- Build betting table ----
+  var OUTSIDE_ROW1 = [
+    { key: "low", label: "1–18" },
+    { key: "even", label: "Чёт" },
+    { key: "red", label: "Красное" },
+    { key: "black", label: "Чёрное" },
+    { key: "odd", label: "Нечет" },
+    { key: "high", label: "19–36" }
+  ];
+  var DOZENS = [
+    { key: "d1", label: "1-я дюжина · 1–12" },
+    { key: "d2", label: "2-я дюжина · 13–24" },
+    { key: "d3", label: "3-я дюжина · 25–36" }
+  ];
+
+  function makeCell(className, label, key) {
+    var div = document.createElement("div");
+    div.className = "cell " + className;
+    div.tabIndex = 0;
+    div.setAttribute("role", "button");
+    div.dataset.key = key;
+    var span = document.createElement("span");
+    span.textContent = label;
+    div.appendChild(span);
+    div.addEventListener("click", function () { placeBet(key); });
+    div.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); placeBet(key); }
+    });
+    return div;
+  }
+
+  // zero
+  tableEl.appendChild(makeCell("zero", "0", "n0"));
+
+  // numbers grid: roulette table is arranged in 3 rows x 12 columns,
+  // column c contains numbers c*3-2 (bottom), c*3-1 (middle), c*3 (top)
+  for (var col = 1; col <= 12; col++) {
+    var top = col * 3, mid = col * 3 - 1, bot = col * 3 - 2;
+    [top, mid, bot].forEach(function (n, rowIdx) {
+      var cell = makeCell("num-" + colorOf(n), String(n), "n" + n);
+      cell.style.gridColumn = String(col + 1);
+      cell.style.gridRow = String(rowIdx + 1);
+      tableEl.appendChild(cell);
+    });
+  }
+
+  // dozens row
+  DOZENS.forEach(function (d, i) {
+    var cell = makeCell("outside dozen", d.label, d.key);
+    cell.style.gridRow = "4";
+    cell.style.gridColumn = (2 + i * 4) + " / span 4";
+    tableEl.appendChild(cell);
+  });
+
+  // outside bets row
+  OUTSIDE_ROW1.forEach(function (o, i) {
+    var cell = makeCell("outside half", o.label, o.key);
+    cell.style.gridRow = "5";
+    cell.style.gridColumn = (2 + i * 2) + " / span 2";
+    if (o.key === "red") cell.style.background = "linear-gradient(160deg, #b5273a, var(--red-pocket-dark))";
+    if (o.key === "black") cell.style.background = "linear-gradient(160deg, var(--black-pocket-light), var(--black-pocket))";
+    tableEl.appendChild(cell);
+  });
+
+  function cellFor(key) {
+    return tableEl.querySelector('[data-key="' + key + '"]');
+  }
+
+  function placeBet(key) {
+    if (spinning) return;
+    if (balance < selectedChip) { showToast("Недостаточно фишек для такой ставки."); return; }
+    balance -= selectedChip;
+    bets[key] = (bets[key] || 0) + selectedChip;
+    renderBalance();
+    renderBadge(key);
+  }
+
+  function renderBadge(key) {
+    var cell = cellFor(key);
+    if (!cell) return;
+    var existing = cell.querySelector(".bet-badge");
+    if (existing) existing.remove();
+    if (bets[key]) {
+      var badge = document.createElement("div");
+      badge.className = "bet-badge";
+      badge.textContent = bets[key];
+      cell.appendChild(badge);
+    }
+  }
+
+  function clearBets(opts) {
+    var refund = opts && opts.refund;
+    Object.keys(bets).forEach(function (key) {
+      if (refund) balance += bets[key];
+      delete bets[key];
+      renderBadge(key);
+    });
+    renderBalance();
+  }
+
+  btnClear.addEventListener("click", function () {
+    if (spinning) return;
+    if (Object.keys(bets).length === 0) return;
+    clearBets({ refund: true });
+    showToast("Ставки сброшены, фишки возвращены.");
+  });
+
+  // ---- Wheel SVG ----
+  function buildWheelSvg() {
+    var n = WHEEL_ORDER.length;
+    var slice = 360 / n;
+    var cx = 100, cy = 100, rOuter = 98, rInner = 46;
+    var svgParts = ['<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">'];
+    var colorMap = { red: "var(--red-pocket)", black: "var(--black-pocket-light)", green: "var(--felt-1)" };
+
+    for (var i = 0; i < n; i++) {
+      var num = WHEEL_ORDER[i];
+      var a0 = (i * slice - 90) * Math.PI / 180;
+      var a1 = ((i + 1) * slice - 90) * Math.PI / 180;
+      var x0 = cx + rOuter * Math.cos(a0), y0 = cy + rOuter * Math.sin(a0);
+      var x1 = cx + rOuter * Math.cos(a1), y1 = cy + rOuter * Math.sin(a1);
+      var xi0 = cx + rInner * Math.cos(a0), yi0 = cy + rInner * Math.sin(a0);
+      var xi1 = cx + rInner * Math.cos(a1), yi1 = cy + rInner * Math.sin(a1);
+      var path = "M" + xi0.toFixed(2) + "," + yi0.toFixed(2) +
+        " L" + x0.toFixed(2) + "," + y0.toFixed(2) +
+        " A" + rOuter + "," + rOuter + " 0 0 1 " + x1.toFixed(2) + "," + y1.toFixed(2) +
+        " L" + xi1.toFixed(2) + "," + yi1.toFixed(2) +
+        " A" + rInner + "," + rInner + " 0 0 0 " + xi0.toFixed(2) + "," + yi0.toFixed(2) + " Z";
+      svgParts.push('<path d="' + path + '" fill="' + colorMap[colorOf(num)] + '" stroke="rgba(0,0,0,0.45)" stroke-width="0.6" />');
+
+      var amid = (a0 + a1) / 2;
+      var rText = rOuter - 12;
+      var tx = cx + rText * Math.cos(amid), ty = cy + rText * Math.sin(amid);
+      var rot = (i * slice + slice / 2);
+      svgParts.push('<text x="' + tx.toFixed(2) + '" y="' + ty.toFixed(2) + '" fill="#f2e8d2" font-size="7" font-family="Georgia, serif" font-weight="700" text-anchor="middle" dominant-baseline="middle" transform="rotate(' + rot.toFixed(2) + ' ' + tx.toFixed(2) + ' ' + ty.toFixed(2) + ')">' + num + '</text>');
+    }
+    svgParts.push("</svg>");
+    return svgParts.join("");
+  }
+  wheelDisc.innerHTML = buildWheelSvg();
+
+  var currentRotation = 0;
+
+  function spinWheelTo(index) {
+    var n = WHEEL_ORDER.length;
+    var slice = 360 / n;
+    var targetSliceCenter = index * slice + slice / 2;
+    var extraTurns = 5 + Math.floor(Math.random() * 2);
+    var finalAngleMod = ((currentRotation % 360) + 360) % 360;
+    var desiredMod = (360 - targetSliceCenter) % 360;
+    var delta = desiredMod - finalAngleMod;
+    if (delta < 0) delta += 360;
+    var newRotation = currentRotation + extraTurns * 360 + delta;
+    currentRotation = newRotation;
+    wheelDisc.style.transform = "rotate(" + newRotation + "deg)";
+  }
+
+  function pushHistory(num) {
+    lastNumbers.unshift(num);
+    if (lastNumbers.length > 10) lastNumbers.pop();
+    historyEl.innerHTML = "";
+    lastNumbers.forEach(function (num) {
+      var d = document.createElement("div");
+      d.className = "chip-hist pocket-" + colorOf(num);
+      d.textContent = num;
+      historyEl.appendChild(d);
+    });
+  }
+
+  function betCoversNumber(key, num) {
+    if (key === "n" + num) return true;
+    if (key === "red") return colorOf(num) === "red";
+    if (key === "black") return colorOf(num) === "black";
+    if (key === "odd") return num !== 0 && num % 2 === 1;
+    if (key === "even") return num !== 0 && num % 2 === 0;
+    if (key === "low") return num >= 1 && num <= 18;
+    if (key === "high") return num >= 19 && num <= 36;
+    if (key === "d1") return num >= 1 && num <= 12;
+    if (key === "d2") return num >= 13 && num <= 24;
+    if (key === "d3") return num >= 25 && num <= 36;
+    return false;
+  }
+
+  var PAYOUT = {
+    straight: 35, red: 1, black: 1, odd: 1, even: 1, low: 1, high: 1, d1: 2, d2: 2, d3: 2
+  };
+
+  function payoutFor(key) {
+    if (key.charAt(0) === "n") return PAYOUT.straight;
+    return PAYOUT[key];
+  }
+
+  function resolveRound(num) {
+    var totalStaked = 0;
+    var totalReturn = 0;
+    var winningKeys = [];
+
+    Object.keys(bets).forEach(function (key) {
+      var amount = bets[key];
+      totalStaked += amount;
+      if (betCoversNumber(key, num)) {
+        var mult = payoutFor(key);
+        var winAmount = amount * (mult + 1);
+        totalReturn += winAmount;
+        winningKeys.push(key);
+      }
+    });
+
+    balance += totalReturn;
+    renderBalance();
+
+    var col = colorOf(num);
+    var colorLabelMap = { red: "Красное", black: "Чёрное", green: "Зеро" };
+    var numberSpan = '<span class="result-number pocket-' + col + '">' + num + "</span>";
+
+    var msg;
+    if (totalReturn > 0) {
+      var net = totalReturn - totalStaked;
+      msg = numberSpan + '<span class="result-text">' + colorLabelMap[col] + " — выигрыш " + fmt(totalReturn) +
+        (net > 0 ? " (чистыми +" + fmt(net) + ")" : "") + "</span>";
+      showToast("Выпало " + num + " (" + colorLabelMap[col].toLowerCase() + "). Вы выиграли " + fmt(totalReturn) + " фишек!");
+    } else if (totalStaked > 0) {
+      msg = numberSpan + '<span class="result-text">' + colorLabelMap[col] + " — в этот раз без выигрыша</span>";
+      showToast("Выпало " + num + " (" + colorLabelMap[col].toLowerCase() + "). Ставки не сыграли.");
+    } else {
+      msg = numberSpan + '<span class="result-text">' + colorLabelMap[col] + " — ставок не было</span>";
+      showToast("Выпало " + num + " (" + colorLabelMap[col].toLowerCase() + ").");
+    }
+    resultPlate.innerHTML = msg;
+
+    Object.keys(bets).forEach(function (key) { delete bets[key]; renderBadge(key); });
+    pushHistory(num);
+  }
+
+  btnSpin.addEventListener("click", function () {
+    if (spinning) return;
+    if (Object.keys(bets).length === 0) {
+      showToast("Сначала сделайте хотя бы одну ставку.");
+      return;
+    }
+    spinning = true;
+    btnSpin.disabled = true;
+    btnClear.disabled = true;
+    resultPlate.innerHTML = '<span class="result-text">Колесо крутится…</span>';
+
+    var winningIndex = Math.floor(Math.random() * WHEEL_ORDER.length);
+    var winningNumber = WHEEL_ORDER[winningIndex];
+    spinWheelTo(winningIndex);
+
+    setTimeout(function () {
+      resolveRound(winningNumber);
+      spinning = false;
+      btnSpin.disabled = false;
+      btnClear.disabled = false;
+    }, 4300);
+  });
+
+  // Rebuy when out of chips
+  function checkBroke() {
+    if (balance <= 0 && Object.keys(bets).length === 0) {
+      balance = 500;
+      renderBalance();
+      showToast("Фишки закончились — казино выдало вам ещё 500 на удачу.");
+    }
+  }
+  setInterval(checkBroke, 1500);
+
+  renderBalance();
+})();
+</script>
