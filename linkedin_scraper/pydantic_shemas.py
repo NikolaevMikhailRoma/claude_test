@@ -11,18 +11,28 @@ Every validator below is a bug that already cost real time. They are cheap to ke
 to rediscover.
 """
 import re
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 
-# Two digits, never more. LinkedIn rolls 60m -> 1h, 24h -> 1d, 7d -> 1w, so a longer number is
-# always a neighbouring number fused onto the age by textContent concatenation ("...502" + "3h"
-# -> "5023h"). A real run produced four of those and dated them seven months back.
+# Two digits, never more: LinkedIn rolls 60m -> 1h, so a longer number is a neighbouring number
+# fused onto the age by textContent concatenation ("...502" + "3h" -> "5023h").
 AGE_RE = re.compile(r"\d{1,2}[mhdw]")
+AGE_UNITS = {"m": 60, "h": 3600, "d": 86400, "w": 604800}
 PROFILE_RE = re.compile(r"https://www\.linkedin\.com/(in|company)/")
 
 # A Recent-sorted feed has served up to 14 days. 30 gives room without admitting a parse error.
 MAX_POST_AGE = timedelta(days=30)
+
+
+def age_seconds(age):
+    """"3h" -> 10800. None if it does not parse. The one place the unit table is read."""
+    if not age or age[-1] not in AGE_UNITS:
+        return None
+    try:
+        return int(age[:-1]) * AGE_UNITS[age[-1]]
+    except ValueError:
+        return None
 
 
 class LinkedInPost(BaseModel):
@@ -63,9 +73,17 @@ class LinkedInPost(BaseModel):
     def _text(cls, v):
         if not v.strip():
             raise ValueError("empty text")
+        # No message here may quote the text: validate.py surfaces these, and feed content must
+        # never reach a model's context. Report shape, not content.
+        #
         # The marker means body cleaning fell through and this is LinkedIn's chrome, not a post.
         if v.startswith("Feed post"):
-            raise ValueError(f"uncleaned body (starts with the feed marker): {v[:60]!r}")
+            raise ValueError(f"uncleaned body: starts with the feed marker ({len(v)} chars)")
+        # norm_key() in parsing/save_run.py fingerprints on letters alone, so a letter-less body
+        # degrades the key to (author, "") and collapses every such post by that author into
+        # one. isalpha(), never [a-z] — the feed is heavily Russian/Ukrainian.
+        if not any(ch.isalpha() for ch in v):
+            raise ValueError(f"no letters in text ({len(v)} chars) — dedup key would degrade")
         return v
 
     @model_validator(mode="after")
@@ -80,11 +98,6 @@ class LinkedInPost(BaseModel):
     def to_json_line(self):
         """One JSONL line. mode='json' so datetimes serialize as ISO strings."""
         return self.model_dump_json()
-
-
-def utc(dt):
-    """Attach UTC to a naive datetime. Timestamps on disk carry 'Z'; ones we build may not."""
-    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 
 def read_jsonl(path):

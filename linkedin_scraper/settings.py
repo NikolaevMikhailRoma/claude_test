@@ -10,9 +10,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 CONFIG_PATH = ROOT / "config.json"
 
-# The handoff: the scraper writes pages, the parser reads them and writes records.
-PAGES = ROOT / "data" / "pages"
-SCRAPED = ROOT / "data" / "scraped"
+# Every path the project reads or writes. Defined once so a rename cannot leave one module
+# pointing at a directory the others stopped using.
+PAGES = ROOT / "data" / "pages"          # the scraper writes here, the parser reads
+SCRAPED = ROOT / "data" / "scraped"      # the dataset, one file per run
+NEW_POSTS = ROOT / "data" / "new_posts.jsonl"   # parse -> save handoff, deleted after save
 
 
 def load():
