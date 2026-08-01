@@ -1,0 +1,17 @@
+{
+  "scraper_params": {
+    "max_scroll_cycles": 400,
+    "pg_down_delay":     [300, 800],
+    "scroll_fraction":   [0.6, 0.9],
+    "settle_ms":         400,
+    "load_wait_ms":      3000,
+    "stuck_limit":       4,
+    "max_minutes":       15,
+    "max_posts":         1500,
+    "max_age_days":      2,
+    "overlap_hours":     6,
+    "stop_streak":       3,
+    "sort_wait_ms":      15000,
+    "hidden_grace_ms":   60000
+  }
+}

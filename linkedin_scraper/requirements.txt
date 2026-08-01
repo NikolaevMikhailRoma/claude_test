@@ -1,0 +1,9 @@
+# Parsing a saved feed page needs a real HTML parser: the extraction rules walk ancestors,
+# count descendants and query by attribute prefix, none of which stdlib html.parser does
+# usefully on a 20MB document.
+beautifulsoup4>=4.12
+lxml>=5.0
+# The record contract in linkedin_scraper.py — validators there encode bugs already paid for.
+pydantic>=2.0
+# Add embedding-model deps here later (e.g. sentence-transformers, numpy) and run:
+#   .venv/bin/pip install -r linkedin_scraper/requirements.txt   (from the repository root)
