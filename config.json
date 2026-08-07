@@ -1,3 +1,10 @@
 {
-  "sources": ["linkedin", "telegram"]
+  "sources": {
+    "linkedin" : "chrome",
+    "telegram" : {
+      "chrome": {
+        "group_urls": []
+      }
+    }
+  }
 }
